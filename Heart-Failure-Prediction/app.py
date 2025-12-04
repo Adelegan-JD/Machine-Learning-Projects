@@ -11,7 +11,7 @@ import base64
 def html_binary_file_downloader(df):
     csv = df.to_csv(index=False)
     encoder_decoder = base64.b64encode(csv.encode()).decode()
-    href = f'<a href="data:file/csv;base64,{b64}" download="predictions.csv">Download Predictions CSV</a>'
+    href = f'<a href="data:file/csv;base64,{encoder_decoder}" download="predictions.csv">Download Predictions CSV</a>'
     return href
 
 
@@ -37,29 +37,30 @@ with tab1:
 
     # Convert all Categorical Columns to Numeric
     sex = 0 if sex == "Male" else 1
-    chest_pain = ['Atypical Angina', 'Asympyomatic', 'Non-Anginal Pain', 'Typical Angina'].index(chest_pain)
-    fasting_bs = 1 if fasting_bs == ">120mg/dl" else 0
+    chest_pain = ['Typical Angina', 'Atypical Angina', 'Non-Anginal Pain', 'Asympyomatic'].index(chest_pain)
+    fasting_bs = 1 if fasting_bs == "> 120 mg/dl" else 0
     resting_ecg = ["Normal", "ST-T Wave Abnormality", "Left Ventricular Hypertrophy"].index(resting_ecg)
     exercise_angina = 1 if exercise_angina == "Yes" else 0
-    st_slope = ["Upsloping", "Flat", "Downsloping"]
+    st_slope = ["Upsloping", "Flat", "Downsloping"].index(st_slope)
 
 
     # Create a DataFrame with user inputs
     input = pd.DataFrame({
-        'age': [age],
-        'sex': [sex],
-        'chest_pain':[chest_pain],
-        'resting_bp': [resting_bp],
-        'cholesterol': [cholesterol],
-        'fasting_bs': [fasting_bs],
-        'max_hr':[max_hr],
-        'exercise_angina': [exercise_angina],
-        'old_peak' : [old_peak],
-        'st_slope' : [st_slope]
+        'Age': [age],
+        'Sex': [sex],
+        'ChestPainType':[chest_pain],
+        'RestingBP': [resting_bp],
+        'Cholesterol': [cholesterol],
+        'FastingBS': [fasting_bs],
+        'RestingECG': [resting_ecg],
+        'MaxHR':[max_hr],
+        'ExerciseAngina': [exercise_angina],
+        'Oldpeak' : [old_peak],
+        'ST_Slope' : [st_slope]
     })
 
     models = ['Random Forest', 'Support Vector Machine', 'Decision Trees', 'Logistic Regression']
-    model_names = ['randomforest.pkl', 'svm.pkl', 'decsiontree.pkl', 'logisticregression.pkl']
+    model_names = ['randomforest.pkl', 'svm.pkl', 'decisiontree.pkl', 'logisticregression.pkl']
 
 
     predictions = []
@@ -121,11 +122,16 @@ with tab2:
 
         if set(dataframe_columns).issubset(input.columns):
 
-            input['Prediction'] = ''
+            # input['Prediction'] = lambda x: 'Heart Disease Predicted' if model.predict(input) == 0 else 'Heart Disease Not Predicted'
 
-            for i in range(len(input)):
-                array = input.iloc[i, :-1].values
-                input['Prediction'][i] = model.predict(array)[0]
+            # input['Prediction'] = model.predict(input).map({1: 'Heart Disease Predicted', 0: 'Heart Disease Not Predicted'})
+            # input['Prediction'] = map({1: 'Heart Disease Predicted', 0: 'Heart Disease Not Predicted'}, model.predict(input))
+            input['Prediction'] = model.predict(input)
+            input['Prediction'] = input['Prediction'].map({1: 'Heart Disease Predicted', 0: 'Heart Disease Not Predicted'})
+
+            # for i in range(len(input)):
+            #     array = input.iloc[i, :-1].values.reshape(1, -1)
+            #     input.loc[i, 'Prediction'][i] = model.predict(array)[0]
             input.to_csv('Predicted_Result.csv')
 
                 # Deploy the predictions
@@ -147,5 +153,5 @@ with tab3:
     Accuracy_Scores = list(data.values())
     df = pd.DataFrame(list(zip(Algorithms, Accuracy_Scores)), columns= ['Algorithms', 'Accuracy_Scores'])
 
-    fig = px.bar(df, y='Accuracy_Scores', x='Algorithms', color='coolwarm')
+    fig = px.bar(df, y='Accuracy_Scores', x='Algorithms', color='Algorithms')
     st.plotly_chart(fig)
