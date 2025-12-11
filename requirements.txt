@@ -49,3 +49,5 @@ watchdog==6.0.0
 joblib
 scikit-learn
 plotly
+seaborn
+nbformat
